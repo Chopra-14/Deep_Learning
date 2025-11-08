@@ -1,0 +1,48 @@
+import numpy as np 
+ 
+words  = ["the", "cat", "sat", "on", "the", "mat"] 
+ 
+vocab = sorted(set(words)) 
+print("Vocabulary: ", vocab) 
+word_to_index = {word: i for i, word in enumerate(vocab)} 
+print("Word to Index Mapping: ", word_to_index) 
+num_words = len(vocab) 
+num_classes = num_words 
+import numpy as np 
+words=["the","cat","sat","on","the","mat"] 
+vocab=sorted(set(words)) 
+print("Vocabulary:",vocab) 
+word_to_index={word:i for i,word in enumerate(vocab)} 
+print("\nWord to Index Mapping:",word_to_index) 
+num_words=len(words) 
+vocab_size=len(vocab) 
+one_hot_matrix=np.zeros((num_words,vocab_size),dtype=int) 
+for i, word in enumerate(words): 
+  index=word_to_index[word] 
+  one_hot_matrix[i,index]=1 
+print("\nOne-Hot Encoded Matrix:") 
+print(one_hot_matrix) 
+for i, word in enumerate(words): 
+  print(f"{word:>5}->{one_hot_matrix[i]}") 
+ 
+#One hot encoding for charactersimport numpy as np 
+text="hello" 
+ 
+chars=sorted(set(text)) 
+print("Characters:",chars) 
+ 
+char_to_index={ch:i for i,ch in enumerate(chars)} 
+print("Character to Index Mapping:",char_to_index) 
+ 
+ 
+one_hot_chars=np.zeros((len(text),len(chars)),dtype=int) 
+for i, ch in enumerate(text): 
+  index=char_to_index[ch] 
+  one_hot_chars[i,index]=1 
+ 
+print("\nOne-Hot Encoded chars:") 
+print(one_hot_chars) 
+print("\nOne-Hot Encoded Matrix:") 
+ 
+for i, ch in enumerate(text): 
+  print(f"{ch}->{one_hot_chars[i]}") 
