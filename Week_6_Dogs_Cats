@@ -1,0 +1,33 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.utils import image_dataset_from_directory
+from google.colab import drive
+
+drive.mount('/content/drive') 
+
+dataset_dir = '/content/drive/MyDrive/PetImages'
+train_ds = image_dataset_from_directory(
+    dataset_dir, validation_split=0.2, subset="training",
+    seed=42, image_size=(180, 180), batch_size=16, label_mode='binary'
+).take(10)
+val_ds = image_dataset_from_directory(
+    dataset_dir, validation_split=0.2, subset="validation",
+    seed=42, image_size=(180, 180), batch_size=16, label_mode='binary'
+).take(5)
+model = Sequential([
+    Conv2D(32, (3,3), activation='relu', input_shape=(180,180,3)),
+    MaxPooling2D(2,2),
+    Conv2D(64, (3,3), activation='relu'),
+    MaxPooling2D(2,2),
+    Conv2D(128, (3,3), activation='relu'),
+    MaxPooling2D(2,2),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dense(1, activation='sigmoid')
+])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.summary()
+history = model.fit(train_ds, validation_data=val_ds, epochs=5)
+print(f"\nFinal Training Accuracy: {history.history['accuracy'][-1] * 100:.2f}%")
+print(f"Final Validation Accuracy: {history.history['val_accuracy'][-1] * 100:.2f}%")
