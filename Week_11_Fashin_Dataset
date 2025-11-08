@@ -1,0 +1,45 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras import regularizers
+from tensorflow.keras.utils import to_categorical
+import matplotlib.pyplot as plt
+import numpy as np
+(train_images, train_labels), (test_images, test_labels) =tf.keras.datasets.fashion_mnist.load_data()
+train_images=train_images.reshape((60000,28,28,1)).astype('float32')/255.0
+test_images=test_images.reshape((10000,28,28,1)).astype('float32')/255.0
+class_names=['T-shirt/top','Trouser','Pullover','Dress','Coat',
+             'Sandal','Shirt','Sneaker','Bag','Ankle boot']
+print(f" Training images shape: {train_images.shape}")
+print(f" Testing images shape: {test_images.shape}")
+print(f" Number of classes: {len(np.unique(train_labels))}")
+model = Sequential([
+    Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1)),
+    MaxPooling2D((2,2)),
+
+    Conv2D(64, (3,3), activation='relu'),
+    MaxPooling2D((2,2)),
+
+    Conv2D(128, (3,3), activation='relu'),
+    MaxPooling2D((2,2)),
+
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
+model.summary()
+model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+history = model.fit(train_images, train_labels,
+                    epochs=3,
+                    batch_size=64,
+                    validation_split=0.1,
+                    validation_data=(test_images, test_labels))
+test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
+print(f"\nTest accuracy: {test_acc:.4f}")
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
