@@ -1,0 +1,44 @@
+import tensorflow as tf
+from tensorflow.keras.datasets import boston_housing
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+import numpy as np
+
+# Load dataset
+(train_data, train_labels), (test_data, test_labels) = boston_housing.load_data()
+mean=train_data.mean(axis=0)
+train_data -= mean
+std=train_data.std(axis=0)
+train_data /= std
+
+test_data -= mean
+test_data /= std
+
+print(f" Training data shape: {train_data.shape}")
+print(f" Training labels shape: {train_labels.shape}")
+print(" Data normalized successfully.")
+num_features=train_data.shape[1]
+model=Sequential([
+    Dense(64,activation='relu',input_shape=(num_features,)),
+    Dense(64,activation='relu'),
+    Dense(1,activation='linear')
+])
+print("Compiling the Model")
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+print("Model Compiled successfully! Ready to train.")
+history = model.fit(train_data, train_labels, epochs=100, batch_size=32, validation_split=0.2, verbose=1)
+loss,mae=model.evaluate(test_data,test_labels,verbose=2)
+print(f"\nFinal Test MSE(Loss): {loss:.2f}")
+print(f"Final Test MAE (Mean Absolute Error): {mae:.2f}")
+y_pred=model.predict(test_data).flatten()
+y_true=test_labels
+ss_total=np.sum((y_true - np.mean(y_true))**2)
+ss_residual=np.sum((y_true - y_pred)**2)
+r_squared=1-(ss_residual/ss_total)
+print(f"Final Test R-Squared ($R^2$): {r_squared:.4f}")
+print("\n---Example: Making a Prediction on a Sample House---")
+sample_house_for_prediction=test_data[0:1]
+true_price=test_labels[1]
+predicted_price=model.predict(sample_house_for_prediction)[0][0]
+print(f" Actual price for the first test house: ${true_price * 1000:,.2f}")
+print(f" Model's Predicted price: ${predicted_price * 1000:,.2f}")
