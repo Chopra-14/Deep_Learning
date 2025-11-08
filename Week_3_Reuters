@@ -1,0 +1,71 @@
+import tensorflow as tf
+from tensorflow.keras.datasets import reuters
+(train_data,train_labels),(test_data,test_labels)=reuters.load_data(num_words=10000)
+num_classes=max(train_labels)+1
+print(f" Number of news categoried (classes): {num_classes}")
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+max_newswire_length=200
+train_data=pad_sequences(train_data,maxlen=max_newswire_length,padding='post',truncating='post')
+test_data=pad_sequences(test_data,maxlen=max_newswire_length,padding='post',truncating='post')
+from tensorflow.keras.utils import to_categorical
+one_hot_train_labels=to_categorical(train_labels,num_classes=num_classes)
+one_hot_test_labels=to_categorical(test_labels,num_classes=num_classes)
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding,GlobalAveragePooling1D,Dense
+vocab_size=10000
+embedding_dim=128
+
+model=Sequential([
+    Embedding(input_dim=vocab_size,output_dim=embedding_dim,input_length=max_newswire_length),
+    GlobalAveragePooling1D(),
+    Dense(64,activation='relu'),
+    Dense(num_classes,activation='softmax') # softmax is for multi class classification
+])
+model.summary()
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+history=model.fit(train_data,
+                  one_hot_train_labels,
+                  epochs=20,
+                  batch_size=64,
+                  validation_split=0.2,
+                  verbose=1
+                  )
+loss,accuracy=model.evaluate(test_data,one_hot_test_labels,verbose=2)
+print(f"\nFinal Test Loss: {loss:.4f}")
+print(f"Final Test Accuracy: {accuracy:.4f}")
+import numpy as np
+import matplotlib.pyplot as plt
+history_dict=history.history
+acc=history_dict['accuracy']
+val_acc=history_dict['val_accuracy']
+loss=history_dict['loss']
+val_loss=history_dict['val_loss']
+epochs=range(1,len(acc)+1)
+plt.figure(figsize=(14,6))
+plt.subplot(1,2,1)
+plt.plot(epochs,loss,'bo-',label='Training Loss')
+plt.plot(epochs,loss,'r^-',label='Validation Loss')
+plt.title('Training and Validation Loss vs. Epochs')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+
+plt.subplot(1,2,2)
+plt.plot(epochs,acc,'bo-',label='Training Accuracy')
+plt.plot(epochs,val_acc,'r^-',label='Validation Accuracy')
+plt.title('Training and Validation Accuracy vs. Epochs')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+
+sample_newswire_for_prediction=test_data[46:47]
+true_category_label=np.argmax(one_hot_test_labels[46])
+prediction_probabilities=model.predict(sample_newswire_for_prediction)[0]
+predicted_category_index=np.argmax(prediction_probabilities)
