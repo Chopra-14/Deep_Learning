@@ -1,0 +1,71 @@
+import tensorflow as tf
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense,Flatten,Dropout
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.utils import to_categorical
+import matplotlib.pyplot as plt
+import numpy as np
+print("------Transfer Learning with BGG16 for CIFAR-10 Classification---")
+(train_images,train_labels),(test_images,test_labels)=tf.keras.datasets.cifar10.load_data()
+train_images = train_images.astype('float32')/255.0
+test_images=test_images.astype('float32')/255.0
+num_classes=10
+train_labels_one_hot=to_categorical(train_labels,num_classes)
+test_labels_one_hot=to_categorical(test_labels,num_classes)
+print(f" Training images shape after resizing: {train_images.shape}")
+print(f" Test images shape after resizing: {test_images.shape}")
+class_names=['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
+vgg16_base=VGG16(weights='imagenet',include_top=False,input_shape=(32,32,3))
+for layer in vgg16_base.layers:
+  layer.trainable=False
+model=Sequential()
+model.add(vgg16_base)
+model.add(Flatten())
+model.add(Dense(256,activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes,activation='softmax'))
+model.summary()
+model.compile(optimizer=Adam(learning_rate=0.001),
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+epochs=3
+history=model.fit(train_images,train_labels_one_hot,
+                  epochs=epochs,
+                  batch_size=128,
+                  validation_data=(test_images,test_labels_one_hot),
+                  verbose=1)
+final_training_accuracy=history.history['accuracy'][-1]
+print(f"Final Training Accuracy: {final_training_accuracy*100:.4f}%")
+final_test_accuracy=history.history['val_accuracy'][-1]
+print(f"Final Test Accuracy: {final_test_accuracy*100:.4f}%")
+acc=history.history['accuracy']
+val_acc=history.history['val_accuracy']
+loss=history.history['loss']
+val_loss=history.history['val_loss']
+epochs=range(epochs)
+plt.figure(figsize=(12,6))
+plt.subplot(1,2,1)
+plt.plot(epochs,acc,label='Training Accuracy')
+plt.plot(epochs,val_acc,label='Validation Accuracy')
+plt.title("Training and Validation Accuracy")
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.grid(True)
+sample_index=np.random.randint(0,len(test_images))
+sample_image=test_images[sample_index]
+true_label_index=test_labels[sample_index][0]
+sample_image_batch=np.expand_dims(sample_image,axis=0)
+prediction_probabilities=model.predict(sample_image_batch)
+predicted_label_index=np.argmax(prediction_probabilities)
+predicted_label=class_names[predicted_label_index]
+true_label=class_names[true_label_index]
+print(f" Model predicted: '{predicted_label}'")
+print(f" Actual label: '{true_label}'")
+print("-"*60)
+plt.figure(figsize=(4,4))
+plt.imshow(sample_image)
+plt.title(f"Predicted: {predicted_label}\nActual: {true_label}")
+plt.axis('off')
+plt.show()
